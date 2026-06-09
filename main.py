@@ -8,7 +8,7 @@ from fastapi import FastAPI, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from product_assistant.ai.model import GeminiModel
+from product_assistant.ai.model import QwenModel
 from product_assistant.ai.postprocessor import PostProcessor
 from product_assistant.ai.preprocessor import TextPreprocessor, ProcessingTask
 from product_assistant.ai.product_mapper import ProductMapper
@@ -57,6 +57,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+product_mapper = ProductMapper(aliases_path=settings.product_aliases_path)
 
 @app.post("/api/update")
 def process_question(request: APIRequest):
@@ -74,10 +75,10 @@ def process_question(request: APIRequest):
                 role=settings.ai_role,
                 template=settings.ai_prompt_template,
             ),
-            product_mapper=ProductMapper(settings.product_aliases_path),
+            product_mapper=product_mapper,
         ),
         postprocessor=PostProcessor(),
-        ai_model=GeminiModel(),
+        ai_model=QwenModel(),
         report_export=ReportExport(db_object=db, processing_task=task),
     )
 
